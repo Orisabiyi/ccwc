@@ -4,6 +4,8 @@ import { Command } from "commander";
 import fs from "fs";
 import path from "path";
 
+import { word } from "./utils.js";
+
 const program = new Command();
 
 program
@@ -17,22 +19,16 @@ program
   .option("-l, --line")
   .option("-c, --byte")
   .option("-m, --character")
-  .action(async (filepath, options) => {
-    // const resolvedPath = path.resolve(filepath);
-    // const stat = fs.statSync(resolvedPath);
-
-    // let total = 0;
-    // const content =
-    //   filepath ?
-    //     fs.createReadStream(resolvedPath, { encoding: "utf8" })
-    //   : process.stdin;
-
-    // content.setEncoding("utf8");
+  .action(async (filepath) => {
+    const options = program.opts();
 
     let total = 0;
     let resolvedPath;
     let content;
     let stat;
+
+    // data
+    let fileData = "";
 
     if (filepath) {
       resolvedPath = path.resolve(filepath);
@@ -46,6 +42,9 @@ program
         );
         process.exit(1);
       }
+    } else {
+      content = process.stdin;
+      content.setEncoding("utf8");
     }
 
     if (options.byte) {
@@ -60,23 +59,36 @@ program
 
     if (options.line) {
       try {
-        if (stat.isFile()) {
-          for await (const chunk of content) {
-            total += (chunk.match(/\n/g) || []).length;
-          }
-
-          console.log(`\t ${total} ${filepath}`);
+        for await (const chunk of content) {
+          total += (chunk.match(/\n/g) || []).length;
         }
+
+        console.log(`\t ${total} ${filepath || ""}`);
       } catch (error) {
         console.log(`Error reading file: ${error.message}`);
       }
     }
 
     if (options.word) {
-      const content = fs.readFileSync(resolvedPath, { encoding: "utf8" });
-      const total = content.match(/\S+/g).length;
+      // let content;
+      // let inputText = "";
 
-      console.log(`\t${total} ${filepath}`);
+      // if (resolvedPath) {
+      //   content = fs.readFileSync(resolvedPath, { encoding: "utf-8" });
+      // } else {
+      //   content = process.stdin;
+      //   content.setEncoding("utf8");
+      // }
+
+      // for await (const chunk of content) {
+      //   inputText += chunk;
+      // }
+
+      // const total = inputText.match(/\S+/g).length;
+
+      const total = await word(resolvedPath);
+
+      console.log(`\t${total} ${filepath || ""}`);
     }
 
     if (options.character) {
@@ -84,7 +96,11 @@ program
         total += chunk.split("").length;
       }
 
-      console.log(`\t${total} ${filepath}`);
+      console.log(`\t${total} ${filepath || ""}`);
+    }
+
+    if (!options.byte && !options.line && !options.word && !options.character) {
+      console.log(fileData);
     }
   });
 
