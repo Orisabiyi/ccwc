@@ -41,6 +41,10 @@ program
         );
         process.exit(1);
       }
+
+      for await (const chunk of content) {
+        contentInput += chunk;
+      }
     } else {
       content = process.stdin;
       content.setEncoding("utf8");
@@ -60,7 +64,7 @@ program
           statSize = Buffer.byteLength(contentInput);
         }
 
-        console.log(statSize);
+        console.log(statSize.toString());
       } catch (error) {
         console.log(`Error reading file: ${error.message}`);
       }
@@ -68,8 +72,8 @@ program
 
     if (options.line) {
       try {
-        const totalOrMessage = await lineCount(content, total, filepath);
-        console.log(totalOrMessage);
+        const total = await lineCount(contentInput, filepath);
+        console.log(total);
       } catch (error) {
         console.log(error);
       }
@@ -77,8 +81,8 @@ program
 
     if (options.word) {
       try {
-        const total = await wordCount(resolvedPath);
-        console.log(`\t${total} ${filepath || ""}`);
+        const total = await wordCount(contentInput);
+        console.log(`${total} ${filepath || ""}`);
       } catch (error) {
         console.log(error);
       }
@@ -95,8 +99,8 @@ program
     if (!options.byte && !options.line && !options.word && !options.character) {
       try {
         const response = await Promise.all([
-          lineCount(content, total, filepath),
-          wordCount(resolvedPath),
+          lineCount(contentInput, filepath),
+          wordCount(contentInput),
           byteCount(stat, filepath),
         ]);
 

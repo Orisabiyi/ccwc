@@ -1,34 +1,16 @@
 import fs from "fs";
 
-export async function wordCount(resolvedPath) {
+export async function wordCount(contentInput) {
   try {
-    let content;
-    let inputText = "";
-
-    if (resolvedPath) {
-      content = fs.readFileSync(resolvedPath, { encoding: "utf-8" });
-    } else {
-      content = process.stdin;
-      content.setEncoding("utf8");
-    }
-
-    for await (const chunk of content) {
-      inputText += chunk;
-    }
-
-    return inputText.match(/\S+/g)?.length ?? 0;
+    return contentInput.match(/\S+/g)?.length ?? 0;
   } catch (error) {
     throw new Error(`Error reading file: ${error.message}`);
   }
 }
 
-export async function lineCount(content, total, filepath) {
+export async function lineCount(content, filepath) {
   try {
-    for await (const chunk of content) {
-      total += (chunk.match(/\n/g) || []).length;
-    }
-
-    return `${total} ${filepath || ""}`;
+    return `${(content.match(/\n/g) || []).length} ${filepath || ""}`;
   } catch (error) {
     throw new Error(`Error reading file: ${error.message}`);
   }
