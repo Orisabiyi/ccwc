@@ -27,9 +27,6 @@ program
     let content;
     let stat;
 
-    // data
-    let fileData = "";
-
     if (filepath) {
       resolvedPath = path.resolve(filepath);
       stat = fs.statSync(resolvedPath);
