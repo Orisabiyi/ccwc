@@ -36,9 +36,7 @@ export async function lineCount(content, total, filepath) {
 
 export async function byteCount(stat, filepath) {
   try {
-    if (stat.isFile()) {
-      return ` ${stat.size} ${filepath}`;
-    }
+    return ` ${stat.size} ${filepath}`;
   } catch (error) {
     return `Error reading file: ${error.message}`;
   }

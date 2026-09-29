@@ -46,8 +46,17 @@ program
 
     if (options.byte) {
       try {
-        const statSize = await byteCount(stat, filepath);
-        console.log(statSize);
+        if (stat) {
+          const statSize = await byteCount(stat, filepath);
+          console.log(statSize);
+        } else {
+          let input = "";
+          for await (const chunk of content) {
+            input += chunk;
+          }
+
+          console.log(Buffer.byteLength(input));
+        }
       } catch (error) {
         console.log(`Error reading file: ${error.message}`);
       }
