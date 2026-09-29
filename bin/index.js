@@ -4,7 +4,7 @@ import { Command } from "commander";
 import fs from "fs";
 import path from "path";
 
-import { word } from "./utils.js";
+import { byteCount, lineCount, wordCount } from "./utils.js";
 
 const program = new Command();
 
@@ -49,9 +49,8 @@ program
 
     if (options.byte) {
       try {
-        if (stat.isFile()) {
-          console.log(`\t${stat.size} ${filepath}`);
-        }
+        const statSize = await byteCount(stat, filepath);
+        console.log(statSize);
       } catch (error) {
         console.log(`Error reading file: ${error.message}`);
       }
@@ -59,36 +58,20 @@ program
 
     if (options.line) {
       try {
-        for await (const chunk of content) {
-          total += (chunk.match(/\n/g) || []).length;
-        }
-
-        console.log(`\t ${total} ${filepath || ""}`);
+        const totalOrMessage = await lineCount(content, total, filepath);
+        console.log(totalOrMessage);
       } catch (error) {
-        console.log(`Error reading file: ${error.message}`);
+        console.log(error);
       }
     }
 
     if (options.word) {
-      // let content;
-      // let inputText = "";
-
-      // if (resolvedPath) {
-      //   content = fs.readFileSync(resolvedPath, { encoding: "utf-8" });
-      // } else {
-      //   content = process.stdin;
-      //   content.setEncoding("utf8");
-      // }
-
-      // for await (const chunk of content) {
-      //   inputText += chunk;
-      // }
-
-      // const total = inputText.match(/\S+/g).length;
-
-      const total = await word(resolvedPath);
-
-      console.log(`\t${total} ${filepath || ""}`);
+      try {
+        const total = await wordCount(resolvedPath);
+        console.log(`\t${total} ${filepath || ""}`);
+      } catch (error) {
+        console.log(error);
+      }
     }
 
     if (options.character) {
@@ -100,7 +83,20 @@ program
     }
 
     if (!options.byte && !options.line && !options.word && !options.character) {
-      console.log(fileData);
+      try {
+        const response = await Promise.all([
+          lineCount(content, total, filepath),
+          wordCount(resolvedPath),
+          byteCount(stat, filepath),
+        ]);
+
+        console.log(
+          response.toString().replaceAll(",", "").replaceAll(filepath, ""),
+          filepath,
+        );
+      } catch (error) {
+        console.log(error);
+      }
     }
   });
 
