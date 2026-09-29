@@ -27,6 +27,8 @@ program
     let content;
     let stat;
 
+    let contentInput = "";
+
     if (filepath) {
       resolvedPath = path.resolve(filepath);
       stat = fs.statSync(resolvedPath);
@@ -42,21 +44,23 @@ program
     } else {
       content = process.stdin;
       content.setEncoding("utf8");
+
+      for await (const chunk of content) {
+        contentInput += chunk;
+      }
     }
 
     if (options.byte) {
       try {
-        if (stat) {
-          const statSize = await byteCount(stat, filepath);
-          console.log(statSize);
-        } else {
-          let input = "";
-          for await (const chunk of content) {
-            input += chunk;
-          }
+        let statSize;
 
-          console.log(Buffer.byteLength(input));
+        if (stat) {
+          statSize = await byteCount(stat, filepath);
+        } else {
+          statSize = Buffer.byteLength(contentInput);
         }
+
+        console.log(statSize);
       } catch (error) {
         console.log(`Error reading file: ${error.message}`);
       }
