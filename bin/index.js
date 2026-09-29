@@ -12,30 +12,46 @@ program
   .version("1.0.0");
 
 program
-  .argument("<filepath>")
+  .argument("[filepath]")
   .option("-w, --word")
   .option("-l, --line")
   .option("-c, --byte")
   .option("-m, --character")
-  .action(async (filepath) => {
-    const options = program.opts();
-    const resolvedPath = path.resolve(filepath);
-    const stat = fs.statSync(resolvedPath);
+  .action(async (filepath, options) => {
+    // const resolvedPath = path.resolve(filepath);
+    // const stat = fs.statSync(resolvedPath);
+
+    // let total = 0;
+    // const content =
+    //   filepath ?
+    //     fs.createReadStream(resolvedPath, { encoding: "utf8" })
+    //   : process.stdin;
+
+    // content.setEncoding("utf8");
 
     let total = 0;
-    const content = fs.createReadStream(resolvedPath, { encoding: "utf8" });
+    let resolvedPath;
+    let content;
+    let stat;
+
+    if (filepath) {
+      resolvedPath = path.resolve(filepath);
+      stat = fs.statSync(resolvedPath);
+
+      content = fs.createReadStream(resolvedPath, { encoding: "utf8" });
+
+      if (stat.isDirectory()) {
+        console.error(
+          `Error reading file: ${filepath}, this is directory. Provide a file`,
+        );
+        process.exit(1);
+      }
+    }
 
     if (options.byte) {
       try {
-        if (stat.isDirectory()) {
-          console.error(
-            `Error reading file: ${filepath}, this is directory. Provide a file`,
-          );
-          process.exit(1);
-        }
-
         if (stat.isFile()) {
-          console.log(`\t${stats.size} ${filepath}`);
+          console.log(`\t${stat.size} ${filepath}`);
         }
       } catch (error) {
         console.log(`Error reading file: ${error.message}`);
@@ -44,13 +60,6 @@ program
 
     if (options.line) {
       try {
-        if (stat.isDirectory()) {
-          console.error(
-            `Error reading file: ${filepath}, this is directory. Provide a file`,
-          );
-          process.exit(1);
-        }
-
         if (stat.isFile()) {
           for await (const chunk of content) {
             total += (chunk.match(/\n/g) || []).length;
