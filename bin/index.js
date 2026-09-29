@@ -13,15 +13,19 @@ program
 
 program
   .argument("<filepath>")
+  .option("-w, --word")
   .option("-l, --line")
-  .option("-w --word")
-  .option("-c, --character")
+  .option("-c, --byte")
+  .option("-m, --character")
   .action(async (filepath) => {
     const options = program.opts();
     const resolvedPath = path.resolve(filepath);
     const stat = fs.statSync(resolvedPath);
 
-    if (options.character) {
+    let total = 0;
+    const content = fs.createReadStream(resolvedPath, { encoding: "utf8" });
+
+    if (options.byte) {
       try {
         if (stat.isDirectory()) {
           console.error(
@@ -39,11 +43,6 @@ program
     }
 
     if (options.line) {
-      let total = 0;
-      const readStream = fs.createReadStream(resolvedPath, {
-        encoding: "utf-8",
-      });
-
       try {
         if (stat.isDirectory()) {
           console.error(
@@ -53,7 +52,7 @@ program
         }
 
         if (stat.isFile()) {
-          for await (const chunk of readStream) {
+          for await (const chunk of content) {
             total += (chunk.match(/\n/g) || []).length;
           }
 
@@ -67,6 +66,14 @@ program
     if (options.word) {
       const content = fs.readFileSync(resolvedPath, { encoding: "utf8" });
       const total = content.match(/\S+/g).length;
+
+      console.log(`\t${total} ${filepath}`);
+    }
+
+    if (options.character) {
+      for await (const chunk of content) {
+        total += chunk.split("").length;
+      }
 
       console.log(`\t${total} ${filepath}`);
     }
