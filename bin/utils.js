@@ -1,5 +1,3 @@
-import fs from "fs";
-
 export async function wordCount(contentInput) {
   try {
     return contentInput.match(/\S+/g)?.length ?? 0;
